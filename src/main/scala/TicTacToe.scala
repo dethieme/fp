@@ -1,10 +1,12 @@
-import java.util.{InputMismatchException, Random}
 import scala.annotation.tailrec
 import scala.io.StdIn
+import scala.util.Random
 
 final val BOARD_WIDTH = 3
 
-def startGameLoop(): Unit = {
+@main def main(): Unit = startGameLoop()
+
+val startGameLoop = () => {
   println("Herzlich Willkommen. Dein Symbol ist das X.")
 
   val initialBoard: Array[Array[Mark]] = Array.fill(BOARD_WIDTH, BOARD_WIDTH)(EMPTY)
@@ -31,7 +33,7 @@ def startGameLoop(): Unit = {
   doNextMove(initialBoard, isHumanTurn = true)
 }
 
-def drawBoardToConsole(board: Array[Array[Mark]]): Unit = {
+val drawBoardToConsole = (board: Array[Array[Mark]]) => {
   println("\n   1  2  3")
 
   board.zipWithIndex.foreach { case (row: Array[Mark], rowIndex: Int) =>
@@ -47,15 +49,15 @@ def drawBoardToConsole(board: Array[Array[Mark]]): Unit = {
   println()
 }
 
-def isGameFinished(board: Array[Array[Mark]]): Boolean = {
+val isGameFinished = (board: Array[Array[Mark]]) => {
   (evaluateGameState(board) != EMPTY) || isBoardFull(board)
 }
 
-def isBoardFull(board: Array[Array[Mark]]): Boolean = {
+val isBoardFull = (board: Array[Array[Mark]]) => {
   !board.flatten.contains(EMPTY)
 }
 
-def makeHumanMove(board: Array[Array[Mark]]): Array[Array[Mark]] = {
+val makeHumanMove = (board: Array[Array[Mark]]) => {
   println("Du bist dran!")
 
   def getConsoleInput: (Int, Int) = {
@@ -71,7 +73,7 @@ def makeHumanMove(board: Array[Array[Mark]]): Array[Array[Mark]] = {
         getConsoleInput
       }
     } catch {
-      case _: InputMismatchException =>
+      case _: NumberFormatException =>
         println("Eingabefehler, versuche es erneut.")
         getConsoleInput
     }
@@ -81,7 +83,7 @@ def makeHumanMove(board: Array[Array[Mark]]): Array[Array[Mark]] = {
   updateBoard(board, row, column, X)
 }
 
-def makeComputerMove(board: Array[Array[Mark]]): Array[Array[Mark]] = {
+val makeComputerMove = (board: Array[Array[Mark]]) => {
   @tailrec
   def generateRandomMove: (Int, Int) = {
     val random = new Random()
@@ -101,7 +103,7 @@ def makeComputerMove(board: Array[Array[Mark]]): Array[Array[Mark]] = {
   updateBoard(board, row, column, O)
 }
 
-def updateBoard(board: Array[Array[Mark]], row: Int, column: Int, mark: Mark): Array[Array[Mark]] = {
+val updateBoard = (board: Array[Array[Mark]], row: Int, column: Int, mark: Mark) => {
   if (isValidMove(board, row, column)) {
     board.updated(row, board(row).updated(column, mark))
   } else {
@@ -110,11 +112,11 @@ def updateBoard(board: Array[Array[Mark]], row: Int, column: Int, mark: Mark): A
   }
 }
 
-def isValidMove(board: Array[Array[Mark]], row: Int, column: Int): Boolean = {
+val isValidMove = (board: Array[Array[Mark]], row: Int, column: Int) => {
   row >= 0 && row < BOARD_WIDTH && column >= 0 && column < BOARD_WIDTH && board(row)(column) == EMPTY
 }
 
-def printGameResult(board: Array[Array[Mark]]): Unit = {
+val printGameResult: Array[Array[Mark]] => Unit = (board: Array[Array[Mark]]) => {
   evaluateGameState(board) match {
     case EMPTY => println("\nUnentschieden")
     case X => println("\nDu gewinnst!")
@@ -124,7 +126,7 @@ def printGameResult(board: Array[Array[Mark]]): Unit = {
   drawBoardToConsole(board)
 }
 
- def evaluateGameState(board: Array[Array[Mark]]): Mark = {
+ val evaluateGameState: Array[Array[Mark]] => Mark = (board: Array[Array[Mark]]) => {
   def determineWinner(lineSum: Int): Mark = {
     if (lineSum == -BOARD_WIDTH) O
     else if (lineSum == BOARD_WIDTH) X
