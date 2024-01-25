@@ -1,4 +1,3 @@
-import scala.annotation.tailrec
 import scala.io.StdIn
 import scala.util.Random
 
@@ -9,16 +8,15 @@ final val BOARD_WIDTH = 3
 val startGameLoop = () => {
   println("Herzlich Willkommen. Dein Symbol ist das X.")
 
-  val initialBoard: Array[Array[Mark]] = Array.fill(BOARD_WIDTH, BOARD_WIDTH)(EMPTY)
+  val initialBoard: Vector[Vector[Mark]] = Vector.fill(BOARD_WIDTH, BOARD_WIDTH)(EMPTY)
   drawBoardToConsole(initialBoard)
 
-  @tailrec
-  def doNextMove(board: Array[Array[Mark]], isHumanTurn: Boolean): Unit = {
+  lazy val doNextMove: (Vector[Vector[Mark]], Boolean) => Unit = (board: Vector[Vector[Mark]], isHumanTurn: Boolean) => {
     if (isGameFinished(board)) {
       println("Spielende!")
       printGameResult(board)
     } else {
-      val updatedBoard: Array[Array[Mark]] =
+      val updatedBoard: Vector[Vector[Mark]] =
         if (isHumanTurn) {
           makeHumanMove(board)
         } else {
@@ -30,13 +28,13 @@ val startGameLoop = () => {
     }
   }
 
-  doNextMove(initialBoard, isHumanTurn = true)
+  doNextMove(initialBoard, true)
 }
 
-val drawBoardToConsole = (board: Array[Array[Mark]]) => {
+val drawBoardToConsole = (board: Vector[Vector[Mark]]) => {
   println("\n   1  2  3")
 
-  board.zipWithIndex.foreach { case (row: Array[Mark], rowIndex: Int) =>
+  board.zipWithIndex.foreach { case (row: Vector[Mark], rowIndex: Int) =>
     print(s"${rowIndex + 1}  ")
     row.foreach {
       case EMPTY => print("-  ")
@@ -49,18 +47,14 @@ val drawBoardToConsole = (board: Array[Array[Mark]]) => {
   println()
 }
 
-val isGameFinished = (board: Array[Array[Mark]]) => {
-  (evaluateGameState(board) != EMPTY) || isBoardFull(board)
+val isGameFinished = (board: Vector[Vector[Mark]]) => {
+  (evaluateGameState(board) != EMPTY) || !board.flatten.contains(EMPTY)
 }
 
-val isBoardFull = (board: Array[Array[Mark]]) => {
-  !board.flatten.contains(EMPTY)
-}
-
-val makeHumanMove = (board: Array[Array[Mark]]) => {
+val makeHumanMove = (board: Vector[Vector[Mark]]) => {
   println("Du bist dran!")
 
-  def getConsoleInput: (Int, Int) = {
+  lazy val getConsoleInput: () => (Int, Int) = () => {
     try {
       println("Gib erst die Zeile, dann die Spalte ein:")
       val row = StdIn.readInt() - 1
@@ -70,22 +64,21 @@ val makeHumanMove = (board: Array[Array[Mark]]) => {
         (row, column)
       } else {
         println("Ungültiger Zug, versuche es erneut.")
-        getConsoleInput
+        getConsoleInput()
       }
     } catch {
       case _: NumberFormatException =>
         println("Eingabefehler, versuche es erneut.")
-        getConsoleInput
+        getConsoleInput()
     }
   }
 
-  val (row, column) = getConsoleInput
+  val (row, column) = getConsoleInput()
   updateBoard(board, row, column, X)
 }
 
-val makeComputerMove = (board: Array[Array[Mark]]) => {
-  @tailrec
-  def generateRandomMove: (Int, Int) = {
+val makeComputerMove = (board: Vector[Vector[Mark]]) => {
+  lazy val generateRandomMove: () => (Int, Int) = () => {
     val random = new Random()
     val row = random.nextInt(BOARD_WIDTH)
     val column = random.nextInt(BOARD_WIDTH)
@@ -93,17 +86,17 @@ val makeComputerMove = (board: Array[Array[Mark]]) => {
     if (isValidMove(board, row, column)) {
       (row, column)
     } else {
-      generateRandomMove
+      generateRandomMove()
     }
   }
 
-  val (row, column) = generateRandomMove
+  val (row, column) = generateRandomMove()
   println("Der Computer hat gespielt.")
 
   updateBoard(board, row, column, O)
 }
 
-val updateBoard = (board: Array[Array[Mark]], row: Int, column: Int, mark: Mark) => {
+val updateBoard = (board: Vector[Vector[Mark]], row: Int, column: Int, mark: Mark) => {
   if (isValidMove(board, row, column)) {
     board.updated(row, board(row).updated(column, mark))
   } else {
@@ -112,11 +105,11 @@ val updateBoard = (board: Array[Array[Mark]], row: Int, column: Int, mark: Mark)
   }
 }
 
-val isValidMove = (board: Array[Array[Mark]], row: Int, column: Int) => {
+val isValidMove = (board: Vector[Vector[Mark]], row: Int, column: Int) => {
   row >= 0 && row < BOARD_WIDTH && column >= 0 && column < BOARD_WIDTH && board(row)(column) == EMPTY
 }
 
-val printGameResult: Array[Array[Mark]] => Unit = (board: Array[Array[Mark]]) => {
+val printGameResult = (board: Vector[Vector[Mark]]) => {
   evaluateGameState(board) match {
     case EMPTY => println("\nUnentschieden")
     case X => println("\nDu gewinnst!")
@@ -126,8 +119,8 @@ val printGameResult: Array[Array[Mark]] => Unit = (board: Array[Array[Mark]]) =>
   drawBoardToConsole(board)
 }
 
- val evaluateGameState: Array[Array[Mark]] => Mark = (board: Array[Array[Mark]]) => {
-  def determineWinner(lineSum: Int): Mark = {
+val evaluateGameState = (board: Vector[Vector[Mark]]) => {
+  val determineWinner = (lineSum: Int) => {
     if (lineSum == -BOARD_WIDTH) O
     else if (lineSum == BOARD_WIDTH) X
     else EMPTY
