@@ -35,7 +35,7 @@ class TicTacToe() {
   private def drawBoardToConsole(board: Array[Array[Mark]]): Unit = {
     println("\n   1  2  3")
 
-    board.zipWithIndex.foreach { case (row, rowIndex) =>
+    board.zipWithIndex.foreach { case (row: Array[Mark], rowIndex: Int) =>
       print(s"${rowIndex + 1}  ")
       row.foreach {
         case EMPTY => print("-  ")
