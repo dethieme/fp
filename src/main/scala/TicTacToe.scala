@@ -11,7 +11,8 @@ val startGameLoop = () => {
   val initialBoard: Vector[Vector[Mark]] = Vector.fill(BOARD_WIDTH, BOARD_WIDTH)(EMPTY)
   drawBoardToConsole(initialBoard)
 
-  lazy val doNextMove: (Vector[Vector[Mark]], Boolean) => Unit = (board: Vector[Vector[Mark]], isHumanTurn: Boolean) => {
+  lazy val doNextMove: (Vector[Vector[Mark]], Boolean) => Unit
+              = (board: Vector[Vector[Mark]], isHumanTurn: Boolean) => {
     if (isGameFinished(board)) {
       println("Spielende!")
       printGameResult(board)
