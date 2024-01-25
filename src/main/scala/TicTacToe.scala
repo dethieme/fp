@@ -2,30 +2,34 @@ import java.util.{InputMismatchException, Random}
 import scala.annotation.tailrec
 import scala.io.StdIn
 
-class Board() {
+class TicTacToe() {
   private val BOARD_WIDTH = 3
 
   def startGameLoop(): Unit = {
     println("Herzlich Willkommen. Dein Symbol ist das X.")
 
-    val board: Array[Array[Mark]] = Array.fill(BOARD_WIDTH, BOARD_WIDTH)(EMPTY)
-    drawBoardToConsole(board)
+    val initialBoard: Array[Array[Mark]] = Array.fill(BOARD_WIDTH, BOARD_WIDTH)(EMPTY)
+    drawBoardToConsole(initialBoard)
 
-    var isHumanTurn = true
-    while (!isGameFinished(board)) {
-      if (isHumanTurn) {
-        makeHumanMove(board)
-        isHumanTurn = false
+    @tailrec
+    def doNextMove(board: Array[Array[Mark]], isHumanTurn: Boolean): Unit = {
+      if (isGameFinished(board)) {
+        println("Spielende!")
+        printGameResult(board)
       } else {
-        makeComputerMove(board)
-        isHumanTurn = true
-      }
+        val updatedBoard: Array[Array[Mark]] =
+          if (isHumanTurn) {
+           makeHumanMove(board)
+        } else {
+          makeComputerMove(board)
+        }
 
-      drawBoardToConsole(board)
+        drawBoardToConsole(updatedBoard)
+        doNextMove(updatedBoard, !isHumanTurn)
+      }
     }
 
-    println("Spielende!")
-    printGameResult(board)
+    doNextMove(initialBoard, isHumanTurn = true)
   }
 
   private def drawBoardToConsole(board: Array[Array[Mark]]): Unit = {
@@ -52,7 +56,7 @@ class Board() {
     !board.flatten.contains(EMPTY)
   }
 
-  private def makeHumanMove(board: Array[Array[Mark]]): Unit = {
+  private def makeHumanMove(board: Array[Array[Mark]]): Array[Array[Mark]] = {
     println("Du bist dran!")
 
     def getConsoleInput: (Int, Int) = {
@@ -75,10 +79,10 @@ class Board() {
     }
 
     val (row, column) = getConsoleInput
-    board(row)(column) = X
+    updateBoard(board, row, column, X)
   }
 
-  private def makeComputerMove(board: Array[Array[Mark]]): Unit = {
+  private def makeComputerMove(board: Array[Array[Mark]]): Array[Array[Mark]] = {
     @tailrec
     def generateRandomMove: (Int, Int) = {
       val random = new Random()
@@ -93,8 +97,18 @@ class Board() {
     }
 
     val (row, column) = generateRandomMove
-    board(row)(column) = O
     println("Der Computer hat gespielt.")
+
+    updateBoard(board, row, column, O)
+  }
+
+  private def updateBoard(board: Array[Array[Mark]], row: Int, column: Int, mark: Mark): Array[Array[Mark]] = {
+    if (isValidMove(board, row, column)) {
+      board.updated(row, board(row).updated(column, mark))
+    } else {
+      println("Ungültiger Zug.")
+      board
+    }
   }
 
   private def isValidMove(board: Array[Array[Mark]], row: Int, column: Int): Boolean = {
