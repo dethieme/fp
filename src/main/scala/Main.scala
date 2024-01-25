@@ -1,5 +1,1 @@
-object Main {
-  def main(args: Array[String]): Unit = {
-    startGameLoop()
-  }
-}
+@main def main(): Unit = startGameLoop()
