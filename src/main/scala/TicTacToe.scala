@@ -1,20 +1,18 @@
 import scala.io.StdIn
 import scala.util.Random
 
-final val BOARD_WIDTH = 3
-
-@main def main(): Unit = startGameLoop()
-
-val startGameLoop = () => {
+@main def main(): Unit = {
   println("Herzlich Willkommen. Dein Symbol ist das X.")
+  startGameLoop(3)
+}
 
-  val initialBoard: Vector[Vector[Mark]] = Vector.fill(BOARD_WIDTH, BOARD_WIDTH)(EMPTY)
+val startGameLoop = (boardWidth: Int) => {
+  val initialBoard: Vector[Vector[Mark]] = Vector.fill(boardWidth, boardWidth)(EMPTY)
   drawBoardToConsole(initialBoard)
 
   lazy val doNextMove: (Vector[Vector[Mark]], Boolean) => Unit
               = (board: Vector[Vector[Mark]], isHumanTurn: Boolean) => {
     if (isGameFinished(board)) {
-      println("Spielende!")
       printGameResult(board)
     } else {
       val updatedBoard: Vector[Vector[Mark]] =
@@ -33,7 +31,7 @@ val startGameLoop = () => {
 }
 
 val drawBoardToConsole = (board: Vector[Vector[Mark]]) => {
-  println("\n   1  2  3")
+  println("\n   " + (1 to board.length).mkString("  "))
 
   board.zipWithIndex.foreach { (row: Vector[Mark], rowIndex: Int) =>
     print(s"${rowIndex + 1}  ")
@@ -53,9 +51,9 @@ val isGameFinished = (board: Vector[Vector[Mark]]) => {
 }
 
 val makeHumanMove = (board: Vector[Vector[Mark]]) => {
-  println("Du bist dran!")
-
   lazy val getConsoleInput: () => (Int, Int) = () => {
+    println("Du bist dran!")
+
     try {
       println("Gib erst die Zeile, dann die Spalte ein:")
       val row = StdIn.readInt() - 1
@@ -81,10 +79,11 @@ val makeHumanMove = (board: Vector[Vector[Mark]]) => {
 val makeComputerMove = (board: Vector[Vector[Mark]]) => {
   lazy val generateRandomMove: () => (Int, Int) = () => {
     val random = new Random()
-    val row = random.nextInt(BOARD_WIDTH)
-    val column = random.nextInt(BOARD_WIDTH)
+    val row = random.nextInt(board.length)
+    val column = random.nextInt(board.length)
 
     if (isValidMove(board, row, column)) {
+      println("Der Computer hat gespielt.")
       (row, column)
     } else {
       generateRandomMove()
@@ -92,25 +91,24 @@ val makeComputerMove = (board: Vector[Vector[Mark]]) => {
   }
 
   val (row, column) = generateRandomMove()
-  println("Der Computer hat gespielt.")
-
   updateBoard(board, row, column, O)
 }
 
 val updateBoard = (board: Vector[Vector[Mark]], row: Int, column: Int, mark: Mark) => {
-  if (isValidMove(board, row, column)) {
+  if (isValidMove(null, row, column)) {
     board.updated(row, board(row).updated(column, mark))
   } else {
-    println("Ungültiger Zug.")
     board
   }
 }
 
 val isValidMove = (board: Vector[Vector[Mark]], row: Int, column: Int) => {
-  row >= 0 && row < BOARD_WIDTH && column >= 0 && column < BOARD_WIDTH && board(row)(column) == EMPTY
+  row >= 0 && row < board.length && column >= 0 && column < board.length && board(row)(column) == EMPTY
 }
 
 val printGameResult = (board: Vector[Vector[Mark]]) => {
+  println("Spielende!")
+
   evaluateGameState(board) match {
     case EMPTY => println("\nUnentschieden")
     case X => println("\nDu gewinnst!")
@@ -122,8 +120,8 @@ val printGameResult = (board: Vector[Vector[Mark]]) => {
 
 val evaluateGameState = (board: Vector[Vector[Mark]]) => {
   val determineWinner = (lineSum: Int) => {
-    if (lineSum == -BOARD_WIDTH) O
-    else if (lineSum == BOARD_WIDTH) X
+    if (lineSum == -board.length) O
+    else if (lineSum == board.length) X
     else EMPTY
   }
 
@@ -131,7 +129,7 @@ val evaluateGameState = (board: Vector[Vector[Mark]]) => {
   val colResults = board.transpose.map(column => determineWinner(column.map(_.value).sum))
   val diagonalResults = Seq(
     determineWinner(board.indices.map(i => board(i)(i).value).sum),
-    determineWinner(board.indices.map(i => board(i)(BOARD_WIDTH - 1 - i).value).sum)
+    determineWinner(board.indices.map(i => board(i)(board.length - 1 - i).value).sum)
   )
 
   // Concatenate all results and find first !EMPTY result
