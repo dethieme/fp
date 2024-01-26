@@ -35,12 +35,12 @@ val startGameLoop = () => {
 val drawBoardToConsole = (board: Vector[Vector[Mark]]) => {
   println("\n   1  2  3")
 
-  board.zipWithIndex.foreach { case (row: Vector[Mark], rowIndex: Int) =>
+  board.zipWithIndex.foreach { (row: Vector[Mark], rowIndex: Int) =>
     print(s"${rowIndex + 1}  ")
     row.foreach {
       case EMPTY => print("-  ")
-      case O => print("O  ")
-      case X => print("X  ")
+      case     O => print("O  ")
+      case     X => print("X  ")
     }
     println()
   }
